@@ -110,9 +110,14 @@ pml_train2 &lt;- pml_train2[,colMeans(is.na(pml_train2) | pml_train2==&quot;&quo
 keepNZV &lt;- names(Testing) %in% names(pml_train2)
 Testing &lt;- Testing[,keepNZV]</code></pre>
 </div>
+<div id="expected-out-of-sample-error" class="section level3">
+<h3>Expected out-of-sample error</h3>
+<p>The expected out-of-sample error can be considered to be 1 minus the accuracy of the model we fit applied to the Validation set. Accuracy is the proportion of correct classified observation over the total sample in the subTesting data set. Thus <strong>expected</strong> accuracy is the expected accuracy in the out-of-sample data set (Validation set).</p>
+<p>From the exploration of the data and the specificity of the models we intend to use, it is reasonable to expect that the out of sample error will be very low. At this point it might be overly hopeful to expect out of sample error or less than 0.1 or 10%. This is because, while the models are good, it is rare to see accuracy higher than 0.9 (and thus out of sample error less than 0.1). This especially considering that this is applying a model to a different data set that was not used to build the model.</p>
+</div>
 <div id="cross-validation-model-fitting" class="section level3">
 <h3>Cross Validation &amp; Model Fitting</h3>
-<p>There is often a tendency to split off 25% of the training set into a Validation set and using the remaining 75% to train the model. Because this data set is quite large and the models we are planning to fit are quite system intensive, we will split 60% into a Training set and 40% into a Validation set. we then fit a Decision Tree and Random Forest to be compared thereafter.</p>
+<p>There is often a tendency to split off 25% of the training set into a Validation set and using the remaining 75% to train the model, thus called Cross Validation. Because this data set is quite large and the models we are planning to fit are quite system intensive, we will split 60% into a Training set and 40% into a Validation set. We then fit a Decision Tree and Random Forest to be compared thereafter.</p>
 <pre class="r"><code># partition the data so that 60% of the training dataset into training and the remaining 40% to validation
 part &lt;- createDataPartition(y=pml_train2$classe, p=0.6, list=FALSE)
 Training &lt;- pml_train2[part, ] 

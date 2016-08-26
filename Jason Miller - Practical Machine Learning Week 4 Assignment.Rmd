@@ -52,9 +52,15 @@ keepNZV <- names(Testing) %in% names(pml_train2)
 Testing <- Testing[,keepNZV]
 ```
 
+###Expected out-of-sample error
+
+The expected out-of-sample error can be considered to be 1 minus the accuracy of the model we fit applied to the Validation set. Accuracy is the proportion of correct classified observation over the total sample in the subTesting data set. Thus **expected** accuracy is the expected accuracy in the out-of-sample data set (Validation set).
+
+From the exploration of the data and the specificity of the models we intend to use, it is reasonable to expect that the out of sample error will be very low. At this point it might be overly hopeful to expect out of sample error or less than 0.1 or 10%. This is because, while the models are good, it is rare to see accuracy higher than 0.9 (and thus out of sample error less than 0.1). This especially considering that this is applying a model to a different data set that was not used to build the model.
+
 ###Cross Validation & Model Fitting
 
-There is often a tendency to split off 25% of the training set into a Validation set and using the remaining 75% to train the model. Because this data set is quite large and the models we are planning to fit are quite system intensive, we will split 60% into a Training set and 40% into a Validation set. we then fit a Decision Tree and Random Forest to be compared thereafter.
+There is often a tendency to split off 25% of the training set into a Validation set and using the remaining 75% to train the model, thus called Cross Validation. Because this data set is quite large and the models we are planning to fit are quite system intensive, we will split 60% into a Training set and 40% into a Validation set. We then fit a Decision Tree and Random Forest to be compared thereafter.
 
 ```{r, cache=TRUE}
 # partition the data so that 60% of the training dataset into training and the remaining 40% to validation
