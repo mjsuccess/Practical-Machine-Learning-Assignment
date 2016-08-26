@@ -1,0 +1,94 @@
+---
+title: "Practical Machine Learning Week 4 Assignment"
+author: "Jason Miller"
+date: "23 August 2016"
+output: html_document
+---
+<br>
+
+###Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, our goal will be to use data from accelerometers on the belt, forearm, arm, and dumbbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website [here](http://groupware.les.inf.puc-rio.br/har) (see the section on the Weight Lifting Exercise Dataset).
+
+It is thus the focus of this project to predict whether an exercise is done correctly from the other variables available.
+
+###How the model was built
+
+Our outcome variable is 'classe', a factor variable with 5 levels. For this data set, participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in 5 different fashions:
+
+* exactly according to the specification (Class A)
+* throwing the elbows to the front (Class B)
+* lifting the dumbbell only halfway (Class C)
+* lowering the dumbbell only halfway (Class D)
+* throwing the hips to the front (Class E)
+
+Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes. Prediction evaluations will be based on maximizing the accuracy and minimizing the out-of-sample error. All other available variables after cleaning will be used for prediction. Two models will be tested using Decision Tree and Random Forest algorithms. The model with the highest accuracy will be chosen as our final model.
+
+###Loading the Data
+
+```{r, results="hide", warning=FALSE, message=FALSE, cache=TRUE}
+rm(list=ls())
+pml_train <- read.csv("C:/Users/J Miller/Desktop/Data Science Course/Practical Machine Learning/Assignment/pml-training.csv")
+Testing <- read.csv("C:/Users/J Miller/Desktop/Data Science Course/Practical Machine Learning/Assignment/pml-testing.csv")
+
+#install.packages("caret")
+library(caret); library(rpart); library(randomForest); library(rattle); 
+```
+
+###Exploratory Analysis & Data Cleaning
+To clean the data, we will remove irrelevant variables first. Beyond that, it makes sense to review variables that will not be able to contribute significantly to the model in that they do not capture enough responses to relay meaningful information. Below we remove any variables in which 66% or more of observations are missing or NA.
+
+```{r, cache=TRUE}
+# Perform exploratory analysis
+# dim(pml_train); head(pml_train); summary(pml_train); str(pml_train) 
+
+# Delete variables that are irrelevant to our current project: user_name, raw_timestamp_part_1, raw_timestamp_part_,2 cvtd_timestamp, new_window, and  num_window (columns 1 to 7). 
+pml_train2 <- pml_train[,-c(1:7)]
+Testing <- Testing[,-c(1:7)]
+
+# Delete columns with more than 66% missing or NA values
+pml_train2 <- pml_train2[,colMeans(is.na(pml_train2) | pml_train2=="") < .66]
+keepNZV <- names(Testing) %in% names(pml_train2)
+Testing <- Testing[,keepNZV]
+```
+
+###Cross Validation & Model Fitting
+
+There is often a tendency to split off 25% of the training set into a Validation set and using the remaining 75% to train the model. Because this data set is quite large and the models we are planning to fit are quite system intensive, we will split 60% into a Training set and 40% into a Validation set. we then fit a Decision Tree and Random Forest to be compared thereafter.
+
+```{r, cache=TRUE}
+# partition the data so that 60% of the training dataset into training and the remaining 40% to validation
+part <- createDataPartition(y=pml_train2$classe, p=0.6, list=FALSE)
+Training <- pml_train2[part, ] 
+Validation <- pml_train2[-part, ]
+
+model1 <- rpart(classe ~ ., data=Training, method="class")
+prediction1 <- predict(model1, Validation, type = "class")
+
+model2 <- randomForest(classe ~ ., data=Training, method="class")
+prediction2 <- predict(model2, Validation, type = "class")
+```
+
+Having created both a Decision Tree model and a Random Forests model, we are able to compare their predictive power on the Validation set.
+
+```{r, cache=TRUE}
+# Plot the Decision Tree
+fancyRpartPlot(model1)
+confusionMatrix(prediction1, Validation$classe)
+
+# Test results on Validation data set:
+confusionMatrix(prediction2, Validation$classe)
+```
+
+###Conclussion
+
+From the above, we see that the Random Forest model does significantly better with an accuracy of 0.9939 compared to the 0.7702 accuracy from the Decision Tree model. This, it must be said, was fairly predictable because Random Forests is just successive Decision Trees fit to increase accuracy, so what we have displayed here is literally why Random Forests was created.
+
+None the less, we take our findings and thus use model2, the Random Forests, to predict classe for the Test set. Further, we note that the expected out-of-sample error is estimated at 0.0061, or 0.61%.
+
+###Predicting on Test set
+
+```{r, cache=TRUE}
+predictfinal <- predict(model2, Testing, type="class")
+predictfinal
+```
